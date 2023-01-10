@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-Gets your computer ready to develop the MODULE_NAME module.
+Gets your computer ready to develop the Carbon.Windows.HttpServer module.
 
 .DESCRIPTION
 The init.ps1 script makes the configuraion changes necessary to get your computer ready to develop for the
-MODULE_NAME module. It:
+Carbon.Windows.HttpServer module. It:
 
 
 .EXAMPLE

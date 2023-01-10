@@ -5,7 +5,7 @@ Build:
     ScriptBlock: prism install | Format-Table -Auto
 
 - Version:
-    Path: MODULE_NAME\MODULE_NAME.psd1
+    Path: Carbon.Windows.HttpServer\Carbon.Windows.HttpServer.psd1
     Prerelease:
     - "*/*": alpha$(WHISKEY_BUILD_NUMBER)
     - develop: rc$(WHISKEY_BUILD_NUMBER)
@@ -21,10 +21,10 @@ Build:
 - MergeFile:
     OnlyBy: BuildServer
     # Builds run twice on some serves. Only run this step if the module hasn't been merged yet.
-    IfExists: MODULE_NAME\Functions\*.ps1
+    IfExists: Carbon.Windows.HttpServer\Functions\*.ps1
     Path:
-    - MODULE_NAME\Functions\*.ps1
-    DestinationPath: MODULE_NAME\MODULE_NAME.psm1
+    - Carbon.Windows.HttpServer\Functions\*.ps1
+    DestinationPath: Carbon.Windows.HttpServer\Carbon.Windows.HttpServer.psm1
     DeleteSourceFiles: true
     TextSeparator: "$(NewLine)$(NewLine)"
 
@@ -54,12 +54,12 @@ Build:
     - README.md
     - LICENSE
     - NOTICE
-    DestinationDirectory: MODULE_NAME
+    DestinationDirectory: Carbon.Windows.HttpServer
 
 - Zip:
-    ArchivePath: .output\MODULE_NAME-$(WHISKEY_SEMVER2).zip
+    ArchivePath: .output\Carbon.Windows.HttpServer-$(WHISKEY_SEMVER2).zip
     Path:
-    - MODULE_NAME
+    - Carbon.Windows.HttpServer
     Exclude:
     - "*.pdb"
     - "*.orig"
@@ -67,18 +67,18 @@ Build:
 - Exec:
     OnlyBy: BuildServer
     Path: appveyor
-    Argument: [ 'PushArtifact', '.output/MODULE_NAME-$(WHISKEY_SEMVER2).zip', '-DeploymentName', 'GitHub' ]
+    Argument: [ 'PushArtifact', '.output/Carbon.Windows.HttpServer-$(WHISKEY_SEMVER2).zip', '-DeploymentName', 'GitHub' ]
 
 
 - PublishPowerShellModule:
-    Path: MODULE_NAME
+    Path: Carbon.Windows.HttpServer
 
 - Exec:
     OnlyBy: BuildServer
     Path: appveyor
     Argument: [
         'PushArtifact',
-        '.output/MODULE_NAME.$(WHISKEY_SEMVER2_NO_BUILD_METADATA).nupkg',
+        '.output/Carbon.Windows.HttpServer.$(WHISKEY_SEMVER2_NO_BUILD_METADATA).nupkg',
         '-DeploymentName',
         'PowerShellGallery'
     ]

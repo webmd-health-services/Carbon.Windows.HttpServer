@@ -7,18 +7,18 @@ BeforeAll {
 
     function GivenModuleLoaded
     {
-        Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath '..\MODULE_NAME\MODULE_NAME.psd1' -Resolve)
-        Get-Module -Name 'MODULE_NAME' | Add-Member -MemberType NoteProperty -Name 'NotReloaded' -Value $true
+        Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath '..\Carbon.Windows.HttpServer\Carbon.Windows.HttpServer.psd1' -Resolve)
+        Get-Module -Name 'Carbon.Windows.HttpServer' | Add-Member -MemberType NoteProperty -Name 'NotReloaded' -Value $true
     }
 
     function GivenModuleNotLoaded
     {
-        Remove-Module -Name 'MODULE_NAME' -Force -ErrorAction Ignore
+        Remove-Module -Name 'Carbon.Windows.HttpServer' -Force -ErrorAction Ignore
     }
 
     function ThenModuleLoaded
     {
-        $module = Get-Module -Name 'MODULE_NAME'
+        $module = Get-Module -Name 'Carbon.Windows.HttpServer'
         $module | Should -Not -BeNullOrEmpty
         $module | Get-Member -Name 'NotReloaded' | Should -BeNullOrEmpty
     }
@@ -27,11 +27,11 @@ BeforeAll {
     {
         $script:importedAt = Get-Date
         Start-Sleep -Milliseconds 1
-        & (Join-Path -Path $PSScriptRoot -ChildPath '..\MODULE_NAME\Import-MODULE_NAME.ps1' -Resolve)
+        & (Join-Path -Path $PSScriptRoot -ChildPath '..\Carbon.Windows.HttpServer\Import-Carbon.Windows.HttpServer.ps1' -Resolve)
     }
 }
 
-Describe 'Import-MODULE_NAME' {
+Describe 'Import-Carbon.Windows.HttpServer' {
     It 'should import the module' {
         GivenModuleNotLoaded
         WhenImporting

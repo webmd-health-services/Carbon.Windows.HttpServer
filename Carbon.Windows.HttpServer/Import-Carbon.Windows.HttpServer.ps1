@@ -14,16 +14,16 @@
 
 <#
 .SYNOPSIS
-Imports the MODULE_NAME module into the current session.
+Imports the Carbon.Windows.HttpServer module into the current session.
 
 .DESCRIPTION
-The `Import-MODULE_NAME.ps1` script imports the MODULE_NAME module into the current session. If the module is already
+The `Import-Carbon.Windows.HttpServer.ps1` script imports the Carbon.Windows.HttpServer module into the current session. If the module is already
 loaded, it is removed, then reloaded.
 
 .EXAMPLE
-.\Import-MODULE_NAME.ps1
+.\Import-Carbon.Windows.HttpServer.ps1
 
-Demonstrates how to use this script to import the MODULE_NAME module  into the current PowerShell session.
+Demonstrates how to use this script to import the Carbon.Windows.HttpServer module  into the current PowerShell session.
 #>
 [CmdletBinding()]
 param(
@@ -40,12 +40,12 @@ $Global:WhatIfPreference = $WhatIfPreference = $false
 
 try
 {
-    if( (Get-Module -Name 'MODULE_NAME') )
+    if( (Get-Module -Name 'Carbon.Windows.HttpServer') )
     {
-        Remove-Module -Name 'MODULE_NAME' -Force
+        Remove-Module -Name 'Carbon.Windows.HttpServer' -Force
     }
 
-    Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'MODULE_NAME.psd1' -Resolve)
+    Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'Carbon.Windows.HttpServer.psd1' -Resolve)
 }
 finally
 {
