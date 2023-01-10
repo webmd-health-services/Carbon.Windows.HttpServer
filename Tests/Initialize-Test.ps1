@@ -51,6 +51,9 @@ try
         Write-Verbose -Message ('Importing module "{0}" from "{1}".' -f $moduleName,$modulePath)
         Import-Module -Name $modulePath
     }
+
+    Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath '..\PSModules\Carbon.Cryptography' -Resolve) `
+                  -Function @('Install-CCertificate', 'Uninstall-CCertificate')
 }
 finally
 {

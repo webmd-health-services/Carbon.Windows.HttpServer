@@ -6,10 +6,10 @@ function Get-CHttpsCertificateBinding
     Gets the HTTPS certificate bindings on this computer.
 
     .DESCRIPTION
-    Windows binds HTTPS certificates to an IP addresses/port combination.  This function gets all the HTTPS bindings on this computer, or a binding for a specific IP/port, or $null if one doesn't exist.  The bindings are returned as `Carbon.Certificates.HttpsCertificateBinding` objects.
+    Windows binds HTTPS certificates to an IP addresses/port combination.  This function gets all the HTTPS bindings on this computer, or a binding for a specific IP/port, or $null if one doesn't exist.  The bindings are returned as `Carbon.Windows.HttpServer.HttpsCertificateBinding` objects.
 
     .OUTPUTS
-    Carbon.Certificates.HTTPSCertificateBinding.
+    Carbon.Windows.HttpServer.HttpsCertificateBinding.
 
     .EXAMPLE
     > Get-CHttpsCertificateBinding
@@ -27,42 +27,32 @@ function Get-CHttpsCertificateBinding
     Gets the default HTTPS certificate bound to ALL the computer's IP addresses on port 443.
     #>
     [CmdletBinding()]
-    [OutputType([Carbon.Certificates.HttpsCertificateBinding])]
+    [OutputType([Carbon.Windows.HttpServer.HttpsCertificateBinding])]
     param(
-        [IPAddress]
         # The IP address whose certificate(s) to get.  Should be in the form IP:port. Optional.
-        $IPAddress,
+        [ipaddress] $IPAddress,
 
-        [UInt16]
         # The port whose certificate(s) to get. Optional.
-        $Port
+        [UInt16] $Port
     )
 
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
-    [Carbon.Certificates.HttpsCertificateBinding]::GetHttpsCertificateBindings() |
+    [Carbon.Windows.HttpServer.HttpsCertificateBinding]::GetHttpsCertificateBindings() |
         Where-Object {
             if( $IPAddress )
             {
-                $_.IPAddress -eq $IPAddress
+                return $_.IPAddress -eq $IPAddress
             }
-            else
-            {
-                return $true
-            }
+            return $true
         } |
         Where-Object {
             if( $Port )
             {
-                $_.Port -eq $Port
+                return $_.Port -eq $Port
             }
-            else
-            {
-                return $true
-            }
+            return $true
         }
 
 }
-
-Set-Alias -Name 'Get-CHttpsCertificateBindings' -Value 'Get-CHttpsCertificateBinding'

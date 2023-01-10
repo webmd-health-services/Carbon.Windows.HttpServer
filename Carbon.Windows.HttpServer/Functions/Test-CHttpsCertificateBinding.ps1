@@ -25,7 +25,7 @@ function Test-CHttpsCertificateBinding
     #>
     [CmdletBinding()]
     param(
-        [IPAddress]
+        [ipaddress]
         # The IP address to test for an HTTPS certificate.
         $IPAddress,
 
