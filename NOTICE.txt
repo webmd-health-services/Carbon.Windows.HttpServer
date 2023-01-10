@@ -1,4 +1,4 @@
-MODULE_NAME
+Carbon.Windows.HttpServer
 
 Copyright 2023 WebMD Health Services
 

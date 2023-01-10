@@ -17,7 +17,7 @@ BeforeAll {
         )
 
         $verbs =
-            Get-Command -Module 'MODULE_NAME'|
+            Get-Command -Module 'Carbon.Windows.HttpServer'|
             Where-Object { $_ -isnot [Management.Automation.AliasInfo] } |
             Select-Object -ExpandProperty Verb |
             Select-Object -Unique
@@ -64,10 +64,10 @@ BeforeAll {
     }
 }
 
-Describe 'MODULE_NAME' {
+Describe 'Carbon.Windows.HttpServer' {
     It 'should have about help topic' {
         GivenModuleImported
-        ThenHelpTopic 'about_MODULE_NAME' -Exists
+        ThenHelpTopic 'about_Carbon.Windows.HttpServer' -Exists
     }
 
     It 'should only use approved verbs' {
@@ -77,7 +77,7 @@ Describe 'MODULE_NAME' {
 
     It 'should have a help topic for each command' {
         GivenModuleImported
-        foreach( $cmd in (Get-Command -Module 'MODULE_NAME' -CommandType Function,Cmdlet,Filter))
+        foreach( $cmd in (Get-Command -Module 'Carbon.Windows.HttpServer' -CommandType Function,Cmdlet,Filter))
         {
             ThenHelpTopic $cmd.Name -Exists -HasSynopsis -HasDescription -HasExamples
         }

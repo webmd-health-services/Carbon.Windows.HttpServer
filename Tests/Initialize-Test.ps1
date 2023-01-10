@@ -13,7 +13,7 @@ Execute this script as the first thing in each of your test fixtures:
 
     #Requires -Version 5.1
     Set-StrictMode -Version 'Latest'
-    
+
     & (Join-Path -Path $PSScriptRoot -ChildPath 'Initialize-Test.ps1' -Resolve)
 #>
 [CmdletBinding()]
@@ -29,8 +29,8 @@ $Global:WhatIfPreference = $WhatIfPreference = $false
 try
 {
     $modules = [ordered]@{
-        'MODULE_NAME' = '..\MODULE_NAME';
-        'MODULE_NAMETestHelper' = 'MODULE_NAMETestHelper';
+        'Carbon.Windows.HttpServer' = '..\Carbon.Windows.HttpServer';
+        'Carbon.Windows.HttpServerTestHelper' = 'Carbon.Windows.HttpServerTestHelper';
     }
     foreach( $moduleName in $modules.Keys )
     {

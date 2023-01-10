@@ -1,6 +1,6 @@
 # Overview
 
-The "MODULE_NAME" module...
+The "Carbon.Windows.HttpServer" module...
 
 # System Requirements
 
@@ -12,15 +12,15 @@ The "MODULE_NAME" module...
 To install globally:
 
 ```powershell
-Install-Module -Name 'MODULE_NAME'
-Import-Module -Name 'MODULE_NAME'
+Install-Module -Name 'Carbon.Windows.HttpServer'
+Import-Module -Name 'Carbon.Windows.HttpServer'
 ```
 
 To install privately:
 
 ```powershell
-Save-Module -Name 'MODULE_NAME' -Path '.'
-Import-Module -Name '.\MODULE_NAME'
+Save-Module -Name 'Carbon.Windows.HttpServer' -Path '.'
+Import-Module -Name '.\Carbon.Windows.HttpServer'
 ```
 
 # Commands
