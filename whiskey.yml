@@ -28,14 +28,6 @@ Build:
     DeleteSourceFiles: true
     TextSeparator: "$(NewLine)$(NewLine)"
 
-- CopyFile:
-    Path:
-    - LICENSE.txt
-    - NOTICE.txt
-    - README.md
-    - CHANGELOG.md
-    DestinationDirectory: Carbon
-
 - PowerShell:
     ExceptDuring: Clean
     Path: init.ps1
@@ -50,10 +42,10 @@ Build:
 
 - CopyFile:
     Path:
-    - CHANGELOG.md
+    - LICENSE.txt
+    - NOTICE.txt
     - README.md
-    - LICENSE
-    - NOTICE
+    - CHANGELOG.md
     DestinationDirectory: Carbon.Windows.HttpServer
 
 - Zip:
@@ -68,7 +60,6 @@ Build:
     OnlyBy: BuildServer
     Path: appveyor
     Argument: [ 'PushArtifact', '.output/Carbon.Windows.HttpServer-$(WHISKEY_SEMVER2).zip', '-DeploymentName', 'GitHub' ]
-
 
 - PublishPowerShellModule:
     Path: Carbon.Windows.HttpServer
@@ -93,3 +84,5 @@ Build:
             Enabled: true
             OutputPath: .output\pester.xml
             TestSuiteName: Template-PSModule-OSS-Apache2.0
+        Output:
+            Verbosity: detailed

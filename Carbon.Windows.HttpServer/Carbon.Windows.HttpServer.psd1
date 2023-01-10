@@ -18,10 +18,10 @@
     RootModule = 'Carbon.Windows.HttpServer.psm1'
 
     # Version number of this module.
-    ModuleVersion = '0.0.0'
+    ModuleVersion = '1.0.0'
 
     # ID used to uniquely identify this module
-    GUID = ''
+    GUID = 'fd3d76cd-7299-4b44-bfcb-be5ef715e1de'
 
     # Author of this module
     Author = 'WebMD Health Services'
@@ -36,7 +36,7 @@
     Copyright = '(c) WebMD Health Services.'
 
     # Description of the functionality provided by this module
-    Description = ''
+    Description = 'PowerShell module for managing the Windows HTTP server: getting and setting HTTPS/TLS/SSL certificate bindings to IP addresses and ports.'
 
     # Minimum version of the Windows PowerShell engine required by this module
     PowerShellVersion = '5.1'
@@ -106,7 +106,7 @@
         PSData = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags = @( 'Desktop', 'Core' )
+            Tags = @( 'netsh', 'http', 'sslcert', 'ssl', 'tls', 'https', 'Desktop', 'Core' )
 
             # A URL to the license for this module.
             LicenseUri = 'http://www.apache.org/licenses/LICENSE-2.0'
@@ -120,8 +120,7 @@
             Prerelease = ''
 
             # ReleaseNotes of this module
-            ReleaseNotes = @'
-'@
+            ReleaseNotes = 'https://github.com/webmd-health-services/Carbon.Windows.HttpServer/main/CHANGELOG.md'
         } # End of PSData hashtable
 
     } # End of PrivateData hashtable

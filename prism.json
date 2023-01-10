@@ -1,4 +1,8 @@
 {
-	"PSModules": [
-	]
+  "PSModules": [
+    {
+      "Name": "Carbon.Cryptography",
+      "Version": "3.*"
+    }
+  ]
 }

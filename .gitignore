@@ -5,3 +5,5 @@
 /Carbon.Windows.HttpServer/LICENSE.txt
 /Carbon.Windows.HttpServer/NOTICE.txt
 /Carbon.Windows.HttpServer/README.md
+
+*.orig

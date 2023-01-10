@@ -10,57 +10,61 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-$cert = $null
-$ipAddress = '1.2.3.4'
-$ipV6Address = '::1234'
-$port = '8483'
-$ipPort = '{0}:{1}' -f $ipAddress,$port
-$ipv6Port = '[{0}]:{1}' -f $ipV6Address,$port
-$appID = '454f19a6-3ea8-434c-874f-3a860778e4af'
-$ipV6AppID = 'b01fa31e-d255-48df-983e-c5c6dd0ccd03'
+#Requires -Version 5.1
+#Requires -RunAsAdministrator
+Set-StrictMode -Version 'Latest'
 
-function Start-TestFixture
-{
-    & (Join-Path -Path $PSScriptRoot -ChildPath '..\Initialize-CarbonTest.ps1' -Resolve)
+BeforeAll {
+    Set-StrictMode -Version 'Latest'
+
+    & (Join-Path -Path $PSScriptRoot -ChildPath 'Initialize-Test.ps1' -Resolve)
+
+    $cert = $null
+    $ipAddress = '1.2.3.4'
+    $ipV6Address = '::1234'
+    $port = '8483'
+    $ipPort = '{0}:{1}' -f $ipAddress,$port
+    $ipv6Port = '[{0}]:{1}' -f $ipV6Address,$port
+    $appID = '454f19a6-3ea8-434c-874f-3a860778e4af'
+    $ipV6AppID = 'b01fa31e-d255-48df-983e-c5c6dd0ccd03'
 }
 
-function Start-Test
-{
-    $cert = Install-Certificate (Join-Path $TestDir CarbonTestCertificate.cer -Resolve) -StoreLocation LocalMachine -StoreName My -NoWarn
-    netsh http add sslcert ipport=$ipPort "certhash=$($cert.Thumbprint)" "appid={$appID}"
-    netsh http add sslcert ipport=$ipV6Port "certhash=$($cert.Thumbprint)" "appid={$ipV6AppID}"
-}
+Describe 'Remove-CHttpsCertificateBinding' {
+    BeforeEach {
+        $cert = Install-CCertificate -Path (Join-Path -Path $PSScriptRoot -ChildPath 'CarbonTestCertificate.cer' -Resolve) `
+                                     -StoreLocation LocalMachine `
+                                     -StoreName My `
+                                     -PassThru
+        netsh http add sslcert ipport=$ipPort "certhash=$($cert.Thumbprint)" "appid={$appID}"
+        netsh http add sslcert ipport=$ipV6Port "certhash=$($cert.Thumbprint)" "appid={$ipV6AppID}"
+    }
 
-function Stop-Test
-{
-    netsh http delete sslcert ipport=$ipPort
-    netsh http delete sslcerrt ipport=$ipV6Port
+    AfterEach {
+        netsh http delete sslcert ipport=$ipPort
+        netsh http delete sslcerrt ipport=$ipV6Port
 
-    Uninstall-Certificate -Certificate $cert -StoreLocation LocalMachine -StoreName My -NoWarn
-}
+        Uninstall-CCertificate -Certificate $cert -StoreLocation LocalMachine -StoreName My
+    }
 
-function Test-ShouldRemoveNonExistentBinding
-{
-    $bindings = @( Get-CHttpsCertificateBinding )
-    Remove-CHttpsCertificateBinding -IPAddress '1.2.3.4' -Port '8332'
-    $newBindings = @( Get-CHttpsCertificateBinding )
-    Assert-Equal $bindings.Length $newBindings.Length
-}
+    It 'should remove non existent binding' {
+        $bindings = @( Get-CHttpsCertificateBinding )
+        Remove-CHttpsCertificateBinding -IPAddress '1.2.3.4' -Port '8332'
+        $newBindings = @( Get-CHttpsCertificateBinding )
+        $newBindings.Length | Should -Be $bindings.Length
+    }
 
-function Test-ShouldNotRemoveCertificateWhatIf
-{
-    Remove-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port -WhatIf
-    Assert-True (Test-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port)
-}
+    It 'should not remove certificate what if' {
+        Remove-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port -WhatIf
+        (Test-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port) | Should -BeTrue
+    }
 
-function Test-ShouldRemoveBinding
-{
-    Remove-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port
-    Assert-False (Test-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port)
-}
+    It 'should remove binding' {
+        Remove-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port
+        (Test-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port) | Should -BeFalse
+    }
 
-function Test-ShouldRemoveIPv6Binding
-{
-    Remove-CHttpsCertificateBinding -IPAddress $ipV6Address -Port $port
-    Assert-False (Test-CHttpsCertificateBinding -IPAddress $ipV6Address -Port $port)
+    It 'should remove i pv6 binding' {
+        Remove-CHttpsCertificateBinding -IPAddress $ipV6Address -Port $port
+        (Test-CHttpsCertificateBinding -IPAddress $ipV6Address -Port $port) | Should -BeFalse
+    }
 }

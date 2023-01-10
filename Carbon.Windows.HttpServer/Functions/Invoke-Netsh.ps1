@@ -1,5 +1,5 @@
 
-function Invoke-ConsoleCommand
+function Invoke-Netsh
 {
     <#
     .SYNOPSIS
@@ -11,41 +11,38 @@ function Invoke-ConsoleCommand
     .EXAMPLE
     INTERNAL.
     #>
-    [CmdletBinding(SupportsShouldProcess=$true)]
+    [CmdletBinding(SupportsShouldProcess)]
     param(
-        [Parameter(Mandatory=$true)]
-        [string]
         # The target of the action.
-        $Target,
+        [Parameter(Mandatory)]
+        [String] $Target,
 
-        [Parameter(Mandatory=$true)]
-        [string]
         # The action/command being performed.
-        $Action,
+        [Parameter(Mandatory)]
+        [String] $Action,
 
-        [Parameter(Mandatory=$true)]
-        [scriptblock]
         # The command to run.
-        $ScriptBlock
+        [Parameter(Mandatory, ValueFromRemainingArguments, Position=0)]
+        [String[]] $ArgumentList
     )
 
     Set-StrictMode -Version 'Latest'
-
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
-    if( -not $PSCmdlet.ShouldProcess( $Target, $Action ) )
+    if (-not $PSCmdlet.ShouldProcess($Target, $Action))
     {
         return
     }
 
-    $output = Invoke-Command -ScriptBlock $ScriptBlock
+    Write-Information "netsh $($ArgumentList -join ' ')"
+    $output = netsh $ArgumentList
     if( $LASTEXITCODE )
     {
         $output = $output -join [Environment]::NewLine
-        Write-Error ('Failed action ''{0}'' on target ''{1}'' (exit code {2}): {3}' -f $Action,$Target,$LASTEXITCODE,$output)
+        $msg = "Netsh command ""$($Action)"" on ""$($Target)"" exited with code $($LASTEXITCODE): $($output)"
+        Write-Error -Message $msg -ErrorAction $ErrorActionPreference
+        return
     }
-    else
-    {
-        $output | Where-Object { $_ -ne $null } | Write-Verbose
-    }
+
+    $output | Where-Object { $null -ne $_ } | Write-Verbose
 }

@@ -18,19 +18,16 @@ function Remove-CHttpsCertificateBinding
 
     Removes the default HTTPS certificate from port 443.  The default certificate is bound to all IP addresses.
     #>
-    [CmdletBinding(SupportsShouldProcess=$true)]
+    [CmdletBinding(SupportsShouldProcess)]
     param(
-        [IPAddress]
         # The IP address whose binding to remove.  Default is all IP addresses.
-        $IPAddress = '0.0.0.0',
+        [ipaddress] $IPAddress = '0.0.0.0',
 
-        [UInt16]
         # The port of the binding to remove.  Default is port 443.
-        $Port = 443
+        [UInt16] $Port = 443
     )
 
     Set-StrictMode -Version 'Latest'
-
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
     if( -not (Test-CHttpsCertificateBinding -IPAddress $IPAddress -Port $Port) )
@@ -47,8 +44,8 @@ function Remove-CHttpsCertificateBinding
         $ipPort = '{0}:{1}' -f $IPAddress,$Port
     }
 
-    Invoke-ConsoleCommand -Target $ipPort `
-                          -Action "removing HTTPS certificate binding" `
-                          -ScriptBlock { netsh http delete sslcert ipPort=$ipPort }
+    Invoke-Netsh http delete sslcert ipPort=$ipPort `
+                 -Target $ipPort `
+                 -Action "removing HTTPS certificate binding"
 }
 
