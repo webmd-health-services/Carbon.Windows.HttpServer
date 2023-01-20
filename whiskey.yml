@@ -7,8 +7,8 @@ Build:
 - Version:
     Path: Carbon.Windows.HttpServer\Carbon.Windows.HttpServer.psd1
     Prerelease:
-    - "*/*": alpha$(WHISKEY_BUILD_NUMBER)
-    - develop: rc$(WHISKEY_BUILD_NUMBER)
+    - main: ""
+    - "*": rc1
 
 # Update the AppVeyor build/version number.
 - Exec:
