@@ -21,6 +21,14 @@ All functions now require the `C` prefix and the `Ssl` noun in the name is now `
 * Rename usages of `Test-SslCertificateBinding` and `Test-CSslCertificateBinding` to
 `Test-CHttpsCertificateBinding`.
 
+Update usages of `Get-CHttpsCertificateBinding` that use the `IPAddress` or `Port` parameter with `-ErrorAction Ignore`.
+The `Get-CHttpsCertificateBinding` function now writes an error if searching for a binding and it doesn't exist.
+
+## Changes
+
+* `Get-CHttpsCertificateBinding` now writes an error if a binding doesn't exist on the IP address and/or port passed as
+arguments.
+
 ## Renamed
 
 Functions and function aliases:

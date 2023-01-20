@@ -39,6 +39,8 @@ function Get-CHttpsCertificateBinding
     Set-StrictMode -Version 'Latest'
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
+    $searching = $IPAddress -or $Port
+    $bindings = @()
     [Carbon.Windows.HttpServer.HttpsCertificateBinding]::GetHttpsCertificateBindings() |
         Where-Object {
             if( $IPAddress )
@@ -53,6 +55,32 @@ function Get-CHttpsCertificateBinding
                 return $_.Port -eq $Port
             }
             return $true
-        }
+        } |
+        Tee-Object -Variable 'bindings' |
+        Write-Output
 
+    if (-not $searching -or $bindings)
+    {
+        return
+    }
+
+    $searchDesc = ''
+    if (-not $IPAddress)
+    {
+        $IPAddress = [ipaddress]'0.0.0.0'
+    }
+
+    $searchDesc = $IPAddress.IPAddressToString
+    if ($IPAddress.AddressFamily -eq 'InterNetworkV6')
+    {
+        $searchDesc = "[$($searchDesc)]"
+    }
+
+    if ($Port)
+    {
+        $searchDesc = "$($searchDesc):$($Port)"
+    }
+
+    $msg = "HTTPS certificate binding $($searchDesc) does not exist."
+    Write-Error -Message $msg -ErrorAction $ErrorActionPreference
 }
