@@ -18,9 +18,24 @@ BeforeAll {
     Set-StrictMode -Version 'Latest'
 
     & (Join-Path -Path $PSScriptRoot -ChildPath 'Initialize-Test.ps1' -Resolve)
+
+    $certPath = Join-Path -Path $PSScriptRoot -ChildPath 'CarbonTestCertificate.cer' -Resolve
+    $script:cert = Install-CCertificate -Path $certPath -StoreLocation LocalMachine -StoreName My -PassThru
+}
+
+AfterAll {
+    Get-CHttpsCertificateBinding |
+        Where-Object 'CertificateHash' -EQ $script:cert.Thumbprint |
+        ForEach-Object { Remove-CHttpsCertificateBinding -IPAddress $_.IPAddress -Port $_.Port }
+
+    Uninstall-CCertificate -Thumbprint $script:cert.Thumbprint
 }
 
 Describe 'Get-CHttpsCertificateBinding' {
+    BeforeEach {
+        $Global:Error.Clear()
+    }
+
     It 'should get all bindings' {
         $output = netsh http show sslcert
         foreach ($line in $output)
@@ -165,10 +180,8 @@ Describe 'Get-CHttpsCertificateBinding' {
     }
 
     It 'should get IPv6 binding' {
-        $certPath = Join-Path -Path $PSScriptRoot -ChildPath 'CarbonTestCertificate.cer' -Resolve
-        $cert = Install-CCertificate -Path $certPath -StoreLocation LocalMachine -StoreName My -PassThru
         $appID = '12ec3276-0689-42b0-ad39-c1fe23d25721'
-        Set-CHttpsCertificateBinding -IPAddress '[::]' -Port 443 -ApplicationID $appID -Thumbprint $cert.Thumbprint
+        Set-CHttpsCertificateBinding -IPAddress '[::]' -Port 443 -ApplicationID $appID -Thumbprint $script:cert.Thumbprint
 
         try
         {
@@ -179,5 +192,36 @@ Describe 'Get-CHttpsCertificateBinding' {
         {
             Remove-CHttpsCertificateBinding -IPAddress '[::]' -Port 443
         }
+    }
+
+    It 'should write error if a binding with IP address does not exist' {
+        $result = Get-CHttpsCertificateBinding -IPAddress '::1' -ErrorAction SilentlyContinue
+        $result | Should -BeNullOrEmpty
+        $Global:Error | Should -Match 'HTTPS certificate binding \[::1\] does not exist'
+    }
+
+    It 'should ignore errors' {
+        $result = Get-CHttpsCertificateBinding -IPAddress '::1' -ErrorAction Ignore
+        $result | Should -BeNullOrEmpty
+        $Global:Error | Should -BeNullOrEmpty
+    }
+
+    It 'should write error if a binding with a port does not exist' {
+        $appId = 'dc0d4060-0f1c-41ed-9d7b-8fb08cb38353'
+        $lastBinding = Get-CHttpsCertificateBinding | Sort-Object -Property 'Port' | Sort-Object | Select-Object -Last 1
+
+        if (-not $lastBinding)
+        {
+            $lastBinding = Set-CHttpsCertificateBinding -IPAddress '0.0.0.0' `
+                                                      -Port 44444 `
+                                                      -ApplicationID $appId `
+                                                      -Thumbprint $script:cert.Thumbprint `
+                                                      -PassThru
+        }
+
+        $missingPort = $lastBinding.Port + 1
+        $result = Get-CHttpsCertificateBinding -Port $missingPort -ErrorAction SilentlyContinue
+        $result | Should -BeNullOrEmpty
+        $Global:Error | Should -Match "HTTPS certificate binding 0.0.0.0:$($missingPort) does not exist."
     }
 }

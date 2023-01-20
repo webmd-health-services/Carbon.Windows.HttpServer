@@ -25,13 +25,11 @@ function Test-CHttpsCertificateBinding
     #>
     [CmdletBinding()]
     param(
-        [ipaddress]
         # The IP address to test for an HTTPS certificate.
-        $IPAddress,
+        [ipaddress] $IPAddress,
 
-        [Uint16]
         # The port to test for an HTTPS certificate.
-        $Port
+        [Uint16] $Port
     )
 
     Set-StrictMode -Version 'Latest'
@@ -39,18 +37,18 @@ function Test-CHttpsCertificateBinding
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
     $getArgs = @{ }
-    if( $IPAddress )
+    if ($IPAddress)
     {
         $getArgs.IPAddress = $IPAddress
     }
 
-    if( $Port )
+    if ($Port)
     {
         $getArgs.Port = $Port
     }
 
-    $binding = Get-CHttpsCertificateBinding @getArgs
-    if( $binding )
+    $binding = Get-CHttpsCertificateBinding @getArgs -ErrorAction Ignore
+    if (-not $binding)
     {
         return $True
     }
