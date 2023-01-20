@@ -19,8 +19,21 @@ BeforeAll {
 
     & (Join-Path -Path $PSScriptRoot -ChildPath 'Initialize-Test.ps1' -Resolve)
 
-    $certPath = Join-Path -Path $PSScriptRoot -ChildPath 'CarbonTestCertificate.cer' -Resolve
+    $certPath = Join-Path -Path $PSScriptRoot -ChildPath 'CarbonTestCertificate.pfx' -Resolve
     $script:cert = Install-CCertificate -Path $certPath -StoreLocation LocalMachine -StoreName My -PassThru
+
+    $lastBinding = Get-CHttpsCertificateBinding | Sort-Object -Property 'Port' | Sort-Object | Select-Object -Last 1
+    $script:port = 44444
+    if ($lastBinding)
+    {
+        $script:port = $lastBinding.Port + 1
+    }
+    $script:appId = 'c051fbc5-41c5-4eed-8ae8-8a9d2f5ce6a0'
+    [ipaddress] $script:ipAddress = '1.2.3.4'
+    Set-CHttpsCertificateBinding -IPAddress $script:ipAddress `
+                               -Port $script:port `
+                               -Thumbprint $script:cert.Thumbprint `
+                               -ApplicationID $script:appId
 }
 
 AfterAll {
@@ -34,6 +47,26 @@ AfterAll {
 Describe 'Get-CHttpsCertificateBinding' {
     BeforeEach {
         $Global:Error.Clear()
+    }
+
+    It 'should get by IP address' {
+        Get-CHttpsCertificateBinding -IPAddress $script:ipAddress | Should -Not -BeNullOrEmpty
+        $Global:Error | Should -BeNullOrEmpty
+    }
+
+    It 'should get by port' {
+        Get-CHttpsCertificateBinding -Port $script:port | Should -Not -BeNullOrEmpty
+        $Global:Error | Should -BeNullOrEmpty
+    }
+
+    It 'should get by thumbprint' {
+        Get-CHttpsCertificateBinding -Thumbprint $script:cert.Thumbprint | Should -Not -BeNullOrEmpty
+        $Global:Error | Should -BeNullOrEmpty
+    }
+
+    It 'should get by IP address' {
+        Get-CHttpsCertificateBinding -ApplicationID $script:appId | Should -Not -BeNullOrEmpty
+        $Global:Error | Should -BeNullOrEmpty
     }
 
     It 'should get all bindings' {

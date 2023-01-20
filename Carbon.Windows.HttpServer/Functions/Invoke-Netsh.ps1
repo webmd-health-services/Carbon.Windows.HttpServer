@@ -23,7 +23,10 @@ function Invoke-Netsh
 
         # The command to run.
         [Parameter(Mandatory, ValueFromRemainingArguments, Position=0)]
-        [String[]] $ArgumentList
+        [String[]] $ArgumentList,
+
+        # A comment to show at the end of the information message.
+        [String] $Comment
     )
 
     Set-StrictMode -Version 'Latest'
@@ -34,7 +37,12 @@ function Invoke-Netsh
         return
     }
 
-    Write-Information "netsh $($ArgumentList -join ' ')"
+    if ($Comment)
+    {
+        $Comment = "  # $($Comment)"
+    }
+
+    Write-Information "netsh $($ArgumentList -join ' ')$($Comment)"
     $output = netsh $ArgumentList
     if( $LASTEXITCODE )
     {

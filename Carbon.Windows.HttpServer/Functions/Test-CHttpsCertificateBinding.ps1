@@ -5,56 +5,84 @@ function Test-CHttpsCertificateBinding
     .SYNOPSIS
     Tests if an HTTPS certificate binding exists.
 
-	.DESCRIPTION
-	HTTPS certificates are bound to IP addresses and ports.  This function tests if one exists on a given IP address/port.
+    .DESCRIPTION
+    The `Test-CHttpsCertificateBinding` tests if an HTTPS certificate binding exists. You can check if a binding exists
+    by passing an IP address, port, certificate thumbprint, and/or application ID to the `IPAddress`, `Port`,
+    `Thumbprint`, and `ApplicationID` parameters, respectively. If a cert exists that matches all the criteria you
+    pass, the function returns `$true`, otherwise it returns `$false`. If you pass no arguments, the function tests if
+    *any* bindings exist.
 
-	.EXAMPLE
-	Test-CHttpsCertificateBinding -Port 443
+    .EXAMPLE
+    Test-CHttpsCertificateBinding -Port 443
 
-	Tests if there is a default HTTPS certificate bound to all a machine's IP addresses on port 443.
+    Tests if there are any bindings on port 443.
 
-	.EXAMPLE
-	Test-CHttpsCertificateBinding -IPAddress 10.0.1.1 -Port 443
+    .EXAMPLE
+    Test-CHttpsCertificateBinding -IPAddress 10.0.1.1
 
-	Tests if there is an HTTPS certificate bound to IP address 10.0.1.1 on port 443.
+    Tests if there are any bindings on IP address `10.0.1.1`.
 
-	.EXAMPLE
-	Test-CHttpsCertificateBinding
+    .EXAMPLE
+    Test-CHttpsCertificateBinding -Thumbprint '7d5ce4a8a5ec059b829ed135e9ad8607977691cc'
 
-	Tests if there are any HTTPS certificates bound to any IP address/port on the machine.
+    Tests if there are any bindings to certificate with thumbprint `7d5ce4a8a5ec059b829ed135e9ad8607977691cc`.
+
+    .EXAMPLE
+    Test-CHttpsCertificateBinding -ApplicationID '71740b45-ea65-48c4-a8bd-6f2110c52ba7'
+
+    Tests if there are any bindings for application whose ID is `71740b45-ea65-48c4-a8bd-6f2110c52ba7`.
+
+    .EXAMPLE
+    Test-CHttpsCertificateBinding
+
+    Tests if there are any bindings on the machine.
     #>
     [CmdletBinding()]
     param(
-        # The IP address to test for an HTTPS certificate.
+        # The IP address.
         [ipaddress] $IPAddress,
 
-        # The port to test for an HTTPS certificate.
-        [Uint16] $Port
+        # The port.
+        [Uint16] $Port,
+
+        # The certificate thumbprint.
+        [String] $Thumbprint,
+
+        # The application ID
+        [Guid] $ApplicationID
     )
 
     Set-StrictMode -Version 'Latest'
-
     Use-CallerPreference -Cmdlet $PSCmdlet -Session $ExecutionContext.SessionState
 
     $getArgs = @{ }
     if ($IPAddress)
     {
-        $getArgs.IPAddress = $IPAddress
+        $getArgs['IPAddress'] = $IPAddress
     }
 
     if ($Port)
     {
-        $getArgs.Port = $Port
+        $getArgs['Port']= $Port
+    }
+
+    if ($Thumbprint)
+    {
+        $getArgs['Thumbprint'] = $Thumbprint
+    }
+
+    if ($ApplicationID)
+    {
+        $getArgs['ApplicationID'] = $ApplicationID
     }
 
     $binding = Get-CHttpsCertificateBinding @getArgs -ErrorAction Ignore
-    if (-not $binding)
+
+    if ($binding)
     {
-        return $True
+        return $true
     }
-    else
-    {
-        return $False
-    }
+
+    return $false
 }
 
