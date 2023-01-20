@@ -18,134 +18,150 @@ BeforeAll {
     Set-StrictMode -Version 'Latest'
     & (Join-Path -Path $PSScriptRoot -ChildPath 'Initialize-Test.ps1' -Resolve)
 
+    [ipaddress] $script:ipAddress = $null
+    [ipaddress] $script:ipv6Addres = $null
     $script:cert = $null
+    $certPath = Join-Path -Path $PSScriptRoot -ChildPath 'CarbonTestCertificate.pfx' -Resolve
+    $script:cert = Install-CCertificate -Path $certPath -StoreLocation LocalMachine  -StoreName My  -PassThru
+    $certPath = Join-Path -Path $PSScriptRoot -ChildPath 'CarbonTestCertificate2.pfx' -Resolve
+    $script:cert2 = Install-CCertificate -Path $certPath -StoreLocation LocalMachine  -StoreName My  -PassThru
+    $script:testNum = 1
+    $lastBinding = Get-CHttpsCertificateBinding | Sort-Object -Property 'Port' | Sort-Object | Select-Object -Last 1
+    $script:port = 44444
+    if ($lastBinding)
+    {
+        $script:port = $lastBinding.Port + 1
+    }
+}
+
+AfterAll {
+    Uninstall-CCertificate -Certificate $script:cert -StoreLocation LocalMachine -StoreName My
+    Uninstall-CCertificate -Certificate $script:cert2 -StoreLocation LocalMachine -StoreName My
 }
 
 Describe 'Set-CHttpsCertificateBinding' {
     BeforeEach {
-        $script:cert =
-            Install-CCertificate -Path (Join-Path -Path $PSScriptRoot -ChildPath 'CarbonTestCertificate.cer' -Resolve) `
-                                 -StoreLocation LocalMachine `
-                                 -StoreName My `
-                                 -PassThru
+        $Global:Error.Clear()
+        $script:appId = [Guid]::NewGuid()
+        $script:ipAddress = "$($script:testNum).$($script:testNum).$($script:testNum).$($script:testNum)"
+        $script:ipv6Address = "::$($script:testNum)"
     }
 
     AfterEach {
-        Uninstall-CCertificate -Certificate $script:cert -StoreLocation LocalMachine -StoreName My
+        $script:testNum += 1
+        $script:port += 1
+
+        Remove-CHttpsCertificateBinding -IPAddress $script:ipAddress -ErrorAction Ignore
+        Remove-CHttpsCertificateBinding -IPAddress $script:ipv6Address -ErrorAction Ignore
+        Remove-CHttpsCertificateBinding -Port $script:port -ErrorAction Ignore
+        Remove-CHttpsCertificateBinding -ApplicationID $script:appId -ErrorAction Ignore
+        Remove-CHttpsCertificateBinding -Thumbprint $script:cert.Thumbprint -ErrorAction Ignore
+        Remove-CHttpsCertificateBinding -Thumbprint $script:cert2.Thumbprint -ErrorAction Ignore
     }
 
     It 'should create new HTTPS certificate binding' {
-        $appID = '0e8a659e-8034-4ab1-ab82-dcb0f5e90bfd'
-        $ipAddress = '74.32.80.43'
-        $port = '3847'
-        $binding = Set-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port -ApplicationID $appID -Thumbprint $script:cert.Thumbprint
-        try
-        {
-            $binding | Should -BeNullOrEmpty
-            $binding = Get-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port
-            $ipPort = '{0}:{1}' -f $ipAddress,$port
-            $binding.IPPort | Should -Be $ipPort
-            $binding.ApplicationID | Should -Be $appID
-            $binding.CertificateHash | Should -Be $script:cert.Thumbprint
-        }
-        finally
-        {
-            Remove-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port
-        }
+        Test-CHttpsCertificateBinding -IPAddress $script:ipAddress -Port $script:port | Should -BeFalse
+        $binding = Set-CHttpsCertificateBinding -IPAddress $script:ipAddress `
+                                              -Port $script:port `
+                                              -ApplicationID $script:appId `
+                                              -Thumbprint $script:cert.Thumbprint
+        $binding | Should -BeNullOrEmpty
+        $binding = Get-CHttpsCertificateBinding -IPAddress $script:ipAddress -Port $script:port
+        $binding | Should -Not -BeNullOrEmpty
+        $ipPort = '{0}:{1}' -f $script:ipAddress,$script:port
+        $binding.IPPort | Should -Be $ipPort
+        $binding.ApplicationID | Should -Be $script:appId
+        $binding.CertificateHash | Should -Be $script:cert.Thumbprint
+        $binding.CertificateStoreName | Should -Be 'My'
     }
 
     It 'should return binding' {
-        $appID = '0e8a659e-8034-4ab1-ab82-dcb0f5e90bfd'
-        $ipAddress = '74.32.80.43'
-        $port = '3847'
-        $binding = Set-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port -ApplicationID $appID -Thumbprint $script:cert.Thumbprint -PassThru
-        $expectedBinding = Get-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port
-        try
-        {
-            $binding | Should -Not -BeNullOrEmpty
-            $binding | Should -Be $expectedBinding
-            $ipPort = '{0}:{1}' -f $ipAddress,$port
-            $binding.IPPort | Should -Be $ipPort
-            $binding.ApplicationID | Should -Be $appID
-            $binding.CertificateHash | Should -Be $script:cert.Thumbprint
-        }
-        finally
-        {
-            Remove-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port
-        }
+        $binding = Set-CHttpsCertificateBinding -IPAddress $script:ipAddress `
+                                              -Port $script:port `
+                                              -ApplicationID $script:appId `
+                                              -Thumbprint $script:cert.Thumbprint `
+                                              -PassThru
+
+        $binding | Should -Not -BeNullOrEmpty
+        $expectedBinding = Get-CHttpsCertificateBinding -IPAddress $script:ipAddress -Port $script:port
+        $binding | Should -Be $expectedBinding
+        $ipPort = '{0}:{1}' -f $script:ipAddress,$script:port
+        $binding.IPPort | Should -Be $ipPort
+        $expectedBinding.IPPort | Should -Be $ipPort
+        $binding.ApplicationID | Should -Be $script:appId
+        $expectedBinding.ApplicationID | Should -Be $script:appId
+        $binding.CertificateHash | Should -Be $script:cert.Thumbprint
+        $expectedBinding.CertificateHash | Should -Be $script:cert.Thumbprint
+        $binding.CertificateStoreName | Should -Be 'My'
+        $expectedBinding.CertificateStoreName | Should -Be 'My'
     }
 
     It 'should update existing HTTPS certificate binding' {
-        $appID = '40f5bb4b-569b-47a8-a0cb-39ed797ce8ea'
         $newAppID = '353364bb-1ca8-4d6c-a596-be7608d57771'
-        $ipAddress = '74.38.209.47'
-        $port = '8823'
-        $binding = Set-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port -ApplicationID $appID -Thumbprint $script:cert.Thumbprint
-        $binding | Should -BeNullOrEmpty
-        $binding = Set-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port -ApplicationID $newAppID -Thumbprint $script:cert.Thumbprint
-        $binding | Should -BeNullOrEmpty
-        $binding = Get-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port
-        try
-        {
-            $binding.ApplicationID | Should -Be $newAppID
-        }
-        finally
-        {
-            Remove-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port
-        }
+        Set-CHttpsCertificateBinding -IPAddress $script:ipAddress `
+                                   -Port $script:port `
+                                   -ApplicationID $script:appId `
+                                   -Thumbprint $script:cert.Thumbprint
+
+        Set-CHttpsCertificateBinding -IPAddress $script:ipAddress `
+                                   -Port $script:port `
+                                   -ApplicationID $newAppID `
+                                   -Thumbprint $script:cert.Thumbprint
+        Test-CHttpsCertificateBinding -ApplicationID $script:appId | Should -BeFalse
+        Test-CHttpsCertificateBinding -ApplicationID $newAppID | Should -BeTrue
+
+        Set-CHttpsCertificateBinding -IPAddress $script:ipAddress `
+                                   -Port $script:port `
+                                   -ApplicationID $newAppID `
+                                   -Thumbprint $script:cert2.Thumbprint
+        Test-CHttpsCertificateBinding -Thumbprint $script:cert.Thumbprint | Should -BeFalse
+        Test-CHttpsCertificateBinding -Thumbprint $script:cert2.Thumbprint | Should -BeTrue
+
+        $Global:Error | Should -BeNullOrEmpty
     }
 
-    It 'should support should process' {
-        $appID = '411b1023-be42-458e-8fe7-a7ab6c908566'
-        $ipAddress = '54.72.38.90'
-        $port = '4782'
-        $binding = Set-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port -ApplicationID $appID -Thumbprint $script:cert.Thumbprint -WhatIf
-        $binding | Should -BeNullOrEmpty
-        try
-        {
-            (Get-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port) | Should -BeNullOrEmpty
-        }
-        finally
-        {
-            Remove-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port
-        }
+    It 'should not create binding' {
+        Set-CHttpsCertificateBinding -IPAddress $script:ipAddress `
+                                   -Port $script:port `
+                                   -ApplicationID $script:appId `
+                                   -Thumbprint $script:cert.Thumbprint `
+                                   -WhatIf
+        Test-CHttpsCertificateBinding -IPAddress $script:ipAddress -Port $script:port | Should -BeFalse
     }
 
-    It 'should support should process on binding update' {
-        $appID = '411b1023-be42-458e-8fe7-a7ab6c908566'
-        $newAppID = 'db48e0ec-6d8c-4b2c-9486-a2bb33c68b05'
-        $ipAddress = '54.237.80.94'
-        $port = '7821'
-        $binding = Set-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port -ApplicationID $appID -Thumbprint $script:cert.Thumbprint
-        $binding | Should -BeNullOrEmpty
-        $binding = Set-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port -ApplicationID $newAppID -Thumbprint $script:cert.Thumbprint -WhatIf
-        $binding | Should -BeNullOrEmpty
-        $binding = Get-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port
-        try
-        {
-            $binding.ApplicationID | Should -Be $appID
-        }
-        finally
-        {
-            Remove-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port
-        }
+    It 'should not update binding' {
+        Set-CHttpsCertificateBinding -IPAddress $script:ipAddress `
+                                   -Port $script:port `
+                                   -ApplicationID $script:appId `
+                                   -Thumbprint $script:cert.Thumbprint
+
+        Mock -CommandName 'Remove-CHttpsCertificateBinding' -ModuleName 'Carbon.Windows.HttpServer'
+        Set-CHttpsCertificateBinding -IPAddress $script:ipAddress `
+                                   -Port $script:port `
+                                   -ApplicationID $script:appId `
+                                   -Thumbprint $script:cert.Thumbprint
+
+        Assert-MockCalled -CommandName 'Remove-CHttpsCertificateBinding' -ModuleName 'Carbon.Windows.HttpServer' -Times 0
+        $Global:Error | Should -BeNullOrEmpty
+        $newAppId = [Guid]::NewGuid()
+        Set-CHttpsCertificateBinding -IPAddress $script:ipAddress `
+                                   -Port $script:port `
+                                   -ApplicationID $newAppId `
+                                   -Thumbprint $script:cert.Thumbprint `
+                                   -WhatIf
+
+        Assert-MockCalled -CommandName 'Remove-CHttpsCertificateBinding' -ModuleName 'Carbon.Windows.HttpServer' -Times 1
+        Test-CHttpsCertificateBinding -ApplicationID $script:appId | Should -BeTrue
+        Test-CHttpsCertificateBinding -ApplicationID $newAppId | Should -BeFalse
     }
 
 
-    It 'should support i pv6 address' {
-        $appID = '9aa262a9-dfb3-49db-b368-9f15bc12168c'
-        $ipAddress = '[::]'
-        $port = '7821'
-        $binding = Set-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port -ApplicationID $appID -Thumbprint $script:cert.Thumbprint
-        try
-        {
-            $binding | Should -BeNullOrEmpty
-            $binding = Get-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port
-            $binding.ApplicationID | Should -Be $appID
-        }
-        finally
-        {
-            Remove-CHttpsCertificateBinding -IPAddress $ipAddress -Port $port
-        }
+    It 'should support ipv6 address' {
+        Set-CHttpsCertificateBinding -IPAddress $script:ipv6Address `
+                                   -Port $script:port `
+                                   -ApplicationID $script:appId `
+                                   -Thumbprint $script:cert.Thumbprint
+        $binding = Get-CHttpsCertificateBinding -IPAddress $script:ipv6Address
+        $binding.ApplicationID | Should -Be $script:appId
     }
 }
